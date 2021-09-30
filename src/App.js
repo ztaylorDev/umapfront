@@ -4,12 +4,16 @@ import { Room, Star } from "@material-ui/icons";
 import "./app.css";
 import axios from "axios";
 import { format } from "timeago.js";
+import Register from "./components/Register";
 
 function App() {
-  const currentUser = "zach";
+  const [currentUser,setCurrentUser] = useState(null);
   const [pins, setPins] = useState([]);
   const [currentPlaceId, setCurrentPlaceId] = useState(null);
   const [newPlace, setNewPlace] = useState(null);
+  const [title, setTitle] = useState(null);
+  const [desc, setDesc] = useState(null);
+  const [rating, setRating] = useState(0);
   const [viewport, setViewport] = useState({
     width: "100vw",
     height: "100vh",
@@ -30,9 +34,9 @@ function App() {
     getPins();
   }, []);
 
-  const handleMarkerClick = (id,lat,long) => {
+  const handleMarkerClick = (id, lat, long) => {
     setCurrentPlaceId(id);
-    setViewport({...viewport, latitude: lat, longitude: long});
+    setViewport({ ...viewport, latitude: lat, longitude: long });
   };
 
   const handleAddClick = (e) => {
@@ -41,6 +45,27 @@ function App() {
       lat,
       long,
     });
+  };
+
+  //prevent default is for no page refresh
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const newPin = {
+      username: currentUser,
+      title,
+      desc,
+      rating,
+      lat: newPlace.lat,
+      long: newPlace.long,
+    };
+
+    try {
+      const res = await axios.post("/pins", newPin);
+      setPins([...pins, res.data]);
+      setNewPlace(null);
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   return (
@@ -55,10 +80,10 @@ function App() {
         {pins.map((p) => (
           <>
             <Marker
-              latitude={40.748817}
-              longitude={-73.985428}
-              offsetLeft={-20}
-              offsetTop={-10}
+              latitude={p.lat}
+              longitude={p.long}
+              offsetLeft={-viewport.zoom * 3}
+              offsetTop={-viewport.zoom * 6}
             >
               <Room
                 style={{
@@ -67,7 +92,7 @@ function App() {
                     p.username === currentUser ? "tomato" : "cornflowerblue",
                   cursor: "pointer",
                 }}
-                onClick={() => handleMarkerClick(p._id,p.lat,p.long)}
+                onClick={() => handleMarkerClick(p._id, p.lat, p.long)}
               />
             </Marker>
             {p._id === currentPlaceId && (
@@ -86,11 +111,7 @@ function App() {
                   <p className="desc">{p.desc}</p>
                   <label>Rating</label>
                   <div className="stars">
-                    <Star />
-                    <Star />
-                    <Star />
-                    <Star />
-                    <Star />
+                    {Array(p.rating).fill(<Star className="star" />)}
                   </div>
                   <label>Information</label>
                   <span className="username">
@@ -103,35 +124,50 @@ function App() {
           </>
         ))}
         {newPlace && (
-
           <Popup
-          latitude={newPlace.lat}
-          longitude={newPlace.long}
-          closeButton={true}
-          closeOnClick={false}
-          anchor="left"
-          onClose={() => setNewPlace(null)}
-
+            latitude={newPlace.lat}
+            longitude={newPlace.long}
+            closeButton={true}
+            closeOnClick={false}
+            anchor="left"
+            onClose={() => setNewPlace(null)}
           >
-           <div>
-              <form>
+            <div>
+              <form onSubmit={handleSubmit}>
                 <label>Title</label>
-                <input placeholder="Enter a title" />
+                <input
+                  placeholder="Enter a title"
+                  onChange={(e) => setTitle(e.target.value)}
+                />
                 <label>Review</label>
-                <textarea placeholder="Leave a review" />
+                <textarea
+                  placeholder="Leave a review"
+                  onChange={(e) => setDesc(e.target.value)}
+                />
                 <label>Rating</label>
-                <select>
+                <select onChange={(e) => setRating(e.target.value)}>
                   <option value="1">1</option>
                   <option value="2">2</option>
                   <option value="3">3</option>
                   <option value="4">4</option>
                   <option value="5">5</option>
                 </select>
-                <button className="submitButton" type="submit">Drop a Pin</button>
-              </form>  
-           </div> 
+                <button className="submitButton" type="submit">
+                  Drop a Pin
+                </button>
+              </form>
+            </div>
           </Popup>
         )}
+        {currentUser ? (
+          <button className="button logout">Log out</button>
+        ) : (
+          <div className="buttons">
+            <button className="button login">Login</button>
+            <button className="button register">Register</button>
+          </div>
+        )}
+        <Register/>
       </ReactMapGL>
     </div>
   );
