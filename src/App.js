@@ -5,15 +5,16 @@ import "./app.css";
 import axios from "axios";
 import { format } from "timeago.js";
 import Register from "./components/Register";
+import Login from "./components/Login";
 
 function App() {
-  const [currentUser,setCurrentUser] = useState(null);
+  const [currentUsername, setCurrentUsername] = "gaby"; //input a user to see color change
   const [pins, setPins] = useState([]);
   const [currentPlaceId, setCurrentPlaceId] = useState(null);
   const [newPlace, setNewPlace] = useState(null);
   const [title, setTitle] = useState(null);
   const [desc, setDesc] = useState(null);
-  const [rating, setRating] = useState(0);
+  const [rating, setRating] = useState(1);
   const [viewport, setViewport] = useState({
     width: "100vw",
     height: "100vh",
@@ -21,6 +22,8 @@ function App() {
     longitude: -100.0,
     zoom: 4,
   });
+  const [showRegister, setShowRegister] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
 
   useEffect(() => {
     const getPins = async () => {
@@ -51,7 +54,7 @@ function App() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const newPin = {
-      username: currentUser,
+      username: currentUsername,
       title,
       desc,
       rating,
@@ -89,7 +92,9 @@ function App() {
                 style={{
                   fontSize: viewport.zoom * 6,
                   color:
-                    p.username === currentUser ? "tomato" : "cornflowerblue",
+                    p.username === currentUsername
+                      ? "tomato"
+                      : "cornflowerblue",
                   cursor: "pointer",
                 }}
                 onClick={() => handleMarkerClick(p._id, p.lat, p.long)}
@@ -159,20 +164,36 @@ function App() {
             </div>
           </Popup>
         )}
-        {currentUser ? (
-          <button className="button logout">Log out</button>
+
+          {/* cannot get code to work */}
+        {currentUsername ? (
+          <button className="button logout"> 
+          Log out
+          </button>
         ) : (
           <div className="buttons">
-            <button className="button login">Login</button>
-            <button className="button register">Register</button>
+            <button className="button login" onClick={() => setShowLogin(true)}>
+              Login
+            </button>
+            <button
+              className="button register"
+              onClick={() => setShowRegister(true)}>
+              Register
+            </button>
           </div>
         )}
-        <Register/>
+        {showRegister && <Register setShowRegister={setShowRegister} />}
+        {showLogin && (
+          <Login
+            setShowLogin={setShowLogin}
+            setCurrentUsername={setCurrentUsername}
+           
+          />
+        )}
+        <Register />
       </ReactMapGL>
     </div>
   );
 }
 
 export default App;
-
-//1:04:55
